@@ -1,0 +1,68 @@
+#!/usr/bin/env python
+###############################################################################
+#
+#  Copyright (C) 2014  Thammi
+# 
+#  This program is free software: you can redistribute it and/or modify
+#  it under the terms of the GNU Affero General Public License as published by
+#  the Free Software Foundation, either version 3 of the License, or
+#  (at your option) any later version.
+# 
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU Affero General Public License for more details.
+# 
+#  You should have received a copy of the GNU Affero General Public License
+#  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+###############################################################################
+#
+#  This script checks whether a palava machine is up
+#
+#  Dependencies:
+#
+#   pip install websocket-client
+#
+#  Usage:
+#
+#   ./check_rtc_server ws://$ADDRESS
+#   ./check_rtc_server wss://$ADDRESS
+#
+###############################################################################
+
+from websocket import create_connection
+import json
+import sys
+
+url = sys.argv[1]
+
+try:
+	ws = create_connection(url)
+
+	join_msg = {
+		"event": "join_room",
+		"room_id": "info/amazingtestroomnameformonitoring",
+	}
+
+	ws.send(json.dumps(join_msg))
+	raw = ws.recv()
+
+	data = json.loads(raw)
+
+	ws.close()
+
+	if data['event'] == 'joined_room':
+		print "Successfully joined room (%i members)" % len(data['peers'])
+		sys.exit(0)
+	else:
+		print "Unable to join room, received: " + repr(raw)
+		sys.exit(2)
+
+except SystemExit:
+	pass
+
+except:
+	type, value, _ = sys.exc_info()
+	print "%s: %s" % (type.__name__, value)
+	sys.exit(2)
