@@ -33,7 +33,29 @@
 import stun
 import sys
 
-nat_type, ip, port = stun.get_ip_info(stun_host=sys.argv[1])
+# parse url
+
+host_parts = sys.argv[1].split(':')
+
+if host_parts[0] == 'stun':
+    del host_parts[0]
+
+opts = {}
+
+if len(host_parts) == 1:
+    opts['stun_host'] = host_parts[0]
+elif len(host_parts) == 2:
+    opts['stun_host'] = host_parts[0]
+    opts['stun_port'] = int(host_parts[1])
+else:
+    print("Unable to parse STUN address")
+    sys.exit(1)
+
+# do stun stuff
+
+nat_type, ip, port = stun.get_ip_info(**opts)
+
+# output
 
 if nat_type == 'Blocked':
 	print("Unable to connect to STUN server")
